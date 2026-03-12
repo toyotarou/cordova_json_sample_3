@@ -14,9 +14,8 @@ function renderPokemonCard(pokemon) {
     // これは画像URLの形式に合わせるため
     const id = String(pokemon.id).padStart(3, '0');
 
-    // 画像URL（同じGitHubリポジトリにスプライト画像がある）
     const imgUrl =
-    `https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/sprites/${id}.png`;
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
 
     // <li> 要素を作成
     const li = document.createElement('li');
@@ -62,7 +61,7 @@ function showDialog(pokemon) {
     slide1.className = 'slide';
 slide1.innerHTML = `
 <img
-src="https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/sprites/${id}.png"
+src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png"
 alt="${pokemon.name.english}">
 <h2>${pokemon.name.english}</h2>
 <p>日本語名：${pokemon.name.japanese}</p>
