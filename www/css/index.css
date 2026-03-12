@@ -1,110 +1,96 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-* {
-    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
-}
-
-body {
-    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
-    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
-    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
-    background-color:#E4E4E4;
-    background-image:linear-gradient(to bottom, #A7A7A7 0%, #E4E4E4 51%);
-    font-family: system-ui, -apple-system, -apple-system-font, 'Segoe UI', 'Roboto', sans-serif;
-    font-size:12px;
-    height:100vh;
-    margin:0px;
-    padding:0px;
-    /* Padding to avoid the "unsafe" areas behind notches in the screen */
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-    text-transform:uppercase;
-    width:100%;
-}
-
-/* Portrait layout (default) */
-.app {
-    background:url(../img/logo.png) no-repeat center top; /* 170px x 200px */
-    position:absolute;             /* position in the center of the screen */
-    left:50%;
-    top:50%;
-    height:50px;                   /* text area height */
-    width:225px;                   /* text area width */
-    text-align:center;
-    padding:180px 0px 0px 0px;     /* image height is 200px (bottom 20px are overlapped with text) */
-    margin:-115px 0px 0px -112px;  /* offset vertical: half of image height and text area height */
-                                   /* offset horizontal: half of text area width */
-}
-
-/* Landscape layout (with min-width) */
-@media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
-    .app {
-        background-position:left center;
-        padding:75px 0px 75px 170px;  /* padding-top + padding-bottom + text area = image height */
-        margin:-90px 0px 0px -198px;  /* offset vertical: half of image height */
-                                      /* offset horizontal: half of image width and text area width */
-    }
-}
-
-h1 {
-    font-size:24px;
-    font-weight:normal;
-    margin:0px;
-    overflow:visible;
-    padding:0px;
-    text-align:center;
-}
-
-.event {
-    border-radius:4px;
-    color:#FFFFFF;
-    font-size:12px;
-    margin:0px 30px;
-    padding:2px 0px;
-}
-
-.event.listening {
-    background-color:#333333;
-    display:block;
-}
-
-.event.received {
-    background-color:#4B946A;
-    display:none;
-}
-
-#deviceready.ready .event.listening { display: none; }
-#deviceready.ready .event.received { display: block; }
-
-@keyframes fade {
-    from { opacity: 1.0; }
-    50% { opacity: 0.4; }
-    to { opacity: 1.0; }
-}
-
-.blink {
-    animation:fade 3000ms infinite;
-    -webkit-animation:fade 3000ms infinite;
-}
+/* ① リセット・基本スタイル */
+* {box-sizing: border-box; margin: 0; padding: 0;}
+body {font-family: sans-serif; background: #f5f5f5; -webkit-user-select: none;}
 
 
-@media screen and (prefers-color-scheme: dark) {
-    body {
-        background-image:linear-gradient(to bottom, #585858 0%, #1B1B1B 51%);
-    }
-}
+
+/* ② ヘッダー */
+header {background: #e53935; color: white; padding: 16px; text-align: center;}
+header h1 {font-size: 24px;}
+
+
+
+/* ③ ローディング（スピナーアニメーション） */
+#loading {display: flex; flex-direction: column; align-items: center; padding: 40px;}
+
+/* くるくる回る円 */
+.spinner {width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: #e53935; border-radius: 50%; animation: spin 0.8s linear infinite;}
+
+@keyframes spin {to { transform: rotate(360deg); }}
+
+
+
+/* ④ ポケモン一覧・カード */
+
+/* 一覧はグリッド2列 */
+#pokemon-list {list-style: none; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;}
+
+/* 1枚のカード */
+.pokemon-card {background: white; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); cursor: pointer;}
+.pokemon-card img {width: 64px; height: 64px; object-fit: contain;}
+.card-info {display: flex; flex-direction: column; gap: 4px;}
+.pokemon-number {color: #999; font-size: 12px;}
+.pokemon-name {font-weight: bold; font-size: 14px;}
+
+
+
+/* ⑤ タイプバッジ */
+.type-badges {display: flex; gap: 4px; flex-wrap: wrap;}
+.type-badge {padding: 2px 8px; border-radius: 12px; font-size: 11px; color: white;}
+
+/* タイプ別の色 */
+.type-fire     { background: #f44336; }
+.type-water    { background: #2196f3; }
+.type-grass    { background: #4caf50; }
+.type-electric { background: #ffc107; color: #333; }
+.type-poison   { background: #9c27b0; }
+.type-normal   { background: #9e9e9e; }
+.type-flying   { background: #03a9f4; }
+.type-bug      { background: #8bc34a; }
+.type-rock     { background: #795548; }
+.type-ground   { background: #ff9800; }
+.type-psychic  { background: #e91e63; }
+.type-ice      { background: #00bcd4; }
+.type-dragon   { background: #3f51b5; }
+.type-ghost    { background: #673ab7; }
+.type-fighting { background: #ff5722; }
+
+
+
+/* ⑥ ダイアログ・スライダー */
+
+/* 全面を覆う暗いオーバーレイ */
+#dialog-overlay {display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 100;}
+
+/* ダイアログ本体 */
+.dialog {background: white; border-radius: 16px; width: 90%; max-width: 400px; overflow: hidden;}
+
+/* ダイアログのタイトルバー */
+.dialog-header {display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #e53935; color: white;}
+#dialog-close {background: none; border: none; color: white; font-size: 20px; cursor: pointer;}
+
+/* スライダー本体（横スクロール） */
+#evolution-slider {display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;}
+
+/* スクロールバーを非表示 */
+#evolution-slider::-webkit-scrollbar {display: none;}
+
+/* 1枚のスライド */
+.slide {min-width: 100%; scroll-snap-align: start; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;}
+.slide img {width: 120px; height: 120px; object-fit: contain;}
+
+/* ステータスバー */
+.stat-row {display: flex; align-items: center; gap: 8px; width: 100%;}
+.stat-label {width: 80px; font-size: 12px; color: #666;}
+.stat-bar-bg {flex: 1; background: #eee; border-radius: 4px; height: 8px;}
+.stat-bar {background: #e53935; border-radius: 4px; height: 8px;}
+.stat-value {width: 30px; text-align: right; font-size: 12px;}
+
+/* 矢印ボタンエリア */
+.slider-controls {display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #eee;}
+.arrow-btn {background: #e53935; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer;}
+.slider-indicators {display: flex; flex-direction: column; align-items: center; gap: 4px;}
+#slide-counter {font-size: 12px; color: #666;}
+#slider-dots {display: flex; gap: 6px;}
+.dot {width: 8px; height: 8px; border-radius: 50%; background: #ccc;}
+.dot.active {background: #e53935;}
