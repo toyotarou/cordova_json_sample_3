@@ -1,119 +1,188 @@
-// ローディング表示の切り替え
-// visible が true なら表示、false なら非表示
-function setLoading(visible) {
-    const el = document.getElementById('loading');
-    el.style.display = visible ? 'flex' : 'none';
-}
+/**
+ * UI モジュール - レンダリングとインタラクション
+ */
+const UI = (() => {
+  // ---------- ポケモンリスト ----------
 
-// ポケモン1匹分のカードをリストに追加する
-// pokemon: fetchPokemonList() で取得した1件分のデータ
-function renderPokemonCard(pokemon) {
-    const list = document.getElementById('pokemon-list');
+  /** ポケモンリストをレンダリングする */
+  const renderList = (pokemonList) => {
+    const listEl = document.getElementById('pokemon-list');
+    listEl.innerHTML = '';
 
-    // idを3桁にする（例: 1 → "001"）
-    // これは画像URLの形式に合わせるため
-    const id = String(pokemon.id).padStart(3, '0');
+    pokemonList.forEach((pokemon) => {
+      const item = _createListItem(pokemon);
+      listEl.appendChild(item);
+    });
+  };
 
-    const imgUrl =
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
 
-    // <li> 要素を作成
+
+  const _createListItem = (pokemon) => {
     const li = document.createElement('li');
-    li.className = 'pokemon-card';
-
-// カードの中身をHTMLで組み立てる
-li.innerHTML = `
-<img src="${imgUrl}" alt="${pokemon.name.english}">
-<div class="card-info">
-<span class="pokemon-number">#${id}</span>
-<span class="pokemon-name">${pokemon.name.english}</span>
-<div class="type-badges">
-${pokemon.type.map(t =>
-`<span class="type-badge type-${t.toLowerCase()}">${t}</span>`
-).join('')}
-</div>
-</div>
-`;
-
-    // カードをタップしたらダイアログを表示する
-    li.addEventListener('click', () => showDialog(pokemon));
-
-    // リストに追加
-    list.appendChild(li);
-}
+    li.className = 'pokemon-item';
+    li.innerHTML = `
+      <img class="pokemon-thumb" src="${pokemon.img}" alt="${pokemon.name}" loading="lazy">
+      <div class="pokemon-info">
+        <span class="pokemon-num">No. ${pokemon.num}</span>
+        <span class="pokemon-name">${pokemon.name}</span>
+      </div>
+    `;
+    li.addEventListener('click', () => openDialog(pokemon));
+    return li;
+  };
 
 
 
-// ダイアログを表示する
-function showDialog(pokemon) {
+  // ---------- ダイアログ（進化チェーン PageView）----------
+
+  /** ダイアログを開く */
+  const openDialog = (pokemon) => {
+    const chain = PokemonStore.getEvolutionChain(pokemon);
+    const startIndex = PokemonStore.getCurrentIndexInChain(pokemon, chain);
+
+    _buildSlider(chain, startIndex);
+
     const overlay = document.getElementById('dialog-overlay');
+    overlay.classList.add('active');
+  };
+
+
+
+  /** ダイアログを閉じる */
+  const closeDialog = () => {
+    const overlay = document.getElementById('dialog-overlay');
+    overlay.classList.remove('active');
+  };
+
+
+
+  /**
+   * 進化チェーン PageView（スライダー）を構築する
+   * CSS scroll-snap でページ送りを実現する。
+   * Cordova / モバイル WebView でネイティブのスワイプ操作が使える。
+   */
+  const _buildSlider = (chain, startIndex) => {
     const slider = document.getElementById('evolution-slider');
+    const dots = document.getElementById('slider-dots');
+    const counter = document.getElementById('slide-counter');
 
-    // タイトルにポケモン名をセット
-    document.getElementById('dialog-title').textContent = pokemon.name.english;
-
-    // 前回の内容をリセット
     slider.innerHTML = '';
+    dots.innerHTML = '';
 
-    // --- スライド1: 基本情報 ---
-    const id = String(pokemon.id).padStart(3, '0');
-    const slide1 = document.createElement('div');
-    slide1.className = 'slide';
-slide1.innerHTML = `
-<img
-src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png"
-alt="${pokemon.name.english}">
-<h2>${pokemon.name.english}</h2>
-<p>日本語名：${pokemon.name.japanese}</p>
-<div class="type-badges">
-${pokemon.type.map(t =>
-`<span class="type-badge type-${t.toLowerCase()}">${t}</span>`
-).join('')}
-</div>
-`;
+    chain.forEach((pokemon, i) => {
+      // スライド
+      const slide = document.createElement('div');
+      slide.className = 'slide';
+      slide.innerHTML = _slideTemplate(pokemon);
+      slider.appendChild(slide);
 
-    // --- スライド2: ステータス ---
-    const slide2 = document.createElement('div');
-    slide2.className = 'slide';
-slide2.innerHTML = `
-<h3>Base Stats</h3>
-${Object.entries(pokemon.base).map(([key, val]) => `
-<div class="stat-row">
-<span class="stat-label">${key}</span>
-<div class="stat-bar-bg">
-<div class="stat-bar" style="width:${Math.min(val / 255 * 100, 100)}%"></div>
-</div>
-<span class="stat-value">${val}</span>
-</div>
-`).join('')}
-`;
+      // ドットインジケーター
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (i === startIndex ? ' active' : '');
+      dot.addEventListener('click', () => goToSlide(i));
+      dots.appendChild(dot);
+    });
 
-    // スライダーに追加
-    slider.appendChild(slide1);
-    slider.appendChild(slide2);
+    // スライド枚数表示を更新する関数をスコープ外でも使えるよう保持
+    const updateIndicators = (index) => {
+      counter.textContent = `${index + 1} / ${chain.length}`;
+      dots.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+      });
+    };
 
-    // ドットとカウンターを初期化（1枚目を表示）
-    updateSliderUI(0);
+    /** スクロール位置からカレントインデックスを計算してインジケーターを更新 */
+    const onScroll = () => {
+      const index = Math.round(slider.scrollLeft / slider.offsetWidth);
+      updateIndicators(index);
+    };
 
-    // ダイアログを表示
-    overlay.style.display = 'flex';
-}
+    slider.removeEventListener('scroll', slider._scrollHandler);
+    slider._scrollHandler = onScroll;
+    slider.addEventListener('scroll', onScroll);
+
+    // 矢印ボタン
+    document.getElementById('prev-btn').onclick = () => {
+      const cur = Math.round(slider.scrollLeft / slider.offsetWidth);
+      goToSlide(Math.max(0, cur - 1));
+    };
+    document.getElementById('next-btn').onclick = () => {
+      const cur = Math.round(slider.scrollLeft / slider.offsetWidth);
+      goToSlide(Math.min(chain.length - 1, cur + 1));
+    };
+
+    const goToSlide = (index) => {
+      slider.scrollTo({ left: index * slider.offsetWidth, behavior: 'smooth' });
+      updateIndicators(index);
+    };
+
+    // ダイアログタイトル
+    document.getElementById('dialog-title').textContent = 'Evolution Chain';
+
+    // 初期位置へジャンプ（smooth だと開くアニメーションと競合するため instant）
+    requestAnimationFrame(() => {
+      slider.scrollTo({ left: startIndex * slider.offsetWidth, behavior: 'instant' });
+      updateIndicators(startIndex);
+    });
+  };
 
 
 
-// スライダーのドットとカウンターを更新する
-// index: 現在表示中のスライド番号（0始まり）
-function updateSliderUI(index) {
-    const slider = document.getElementById('evolution-slider');
-    const slides = slider.querySelectorAll('.slide');
+  const _slideTemplate = (pokemon) => {
+    const types = pokemon.type.map((t) => `<span class="type-badge type-${t.toLowerCase()}">${t}</span>`).join('');
+    const weaknesses = pokemon.weaknesses
+      ? pokemon.weaknesses.map((w) => `<span class="weakness-badge">${w}</span>`).join('')
+      : '';
+    return `
+      <div class="slide-inner">
+        <img class="slide-img" src="${pokemon.img}" alt="${pokemon.name}">
+        <h2 class="slide-name">${pokemon.name}</h2>
+        <p class="slide-num">No. ${pokemon.num}</p>
+        <div class="slide-types">${types}</div>
+        <div class="slide-stats">
+          <div class="stat"><span class="stat-label">Height</span><span>${pokemon.height}</span></div>
+          <div class="stat"><span class="stat-label">Weight</span><span>${pokemon.weight}</span></div>
+          <div class="stat"><span class="stat-label">Egg</span><span>${pokemon.egg}</span></div>
+        </div>
+        ${weaknesses ? `<div class="slide-weaknesses"><p class="weak-label">Weaknesses</p>${weaknesses}</div>` : ''}
+      </div>
+    `;
+  };
 
-    // "1 / 2" のような表示
-    document.getElementById('slide-counter').textContent =
-    `${index + 1} / ${slides.length}`;
 
-// ドットを作り直す（現在地をactiveにする）
-document.getElementById('slider-dots').innerHTML =
-Array.from(slides).map((_, i) =>
-`<span class="dot ${i === index ? 'active' : ''}"></span>`
-).join('');
-}
+
+  // ---------- ローディング表示 ----------
+  const showLoading = () => {
+    document.getElementById('loading').style.display = 'flex';
+  };
+
+
+
+  const hideLoading = () => {
+    document.getElementById('loading').style.display = 'none';
+  };
+
+
+
+  const showError = (message) => {
+    const el = document.getElementById('error-message');
+    el.textContent = message;
+    el.style.display = 'block';
+  };
+
+
+  
+  // ---------- 初期化（イベント登録）----------
+  const init = () => {
+    // オーバーレイ背景クリックで閉じる
+    document.getElementById('dialog-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeDialog();
+    });
+    // 閉じるボタン
+    document.getElementById('dialog-close').addEventListener('click', closeDialog);
+  };
+
+
+
+  return { renderList, openDialog, closeDialog, showLoading, hideLoading, showError, init };
+})();

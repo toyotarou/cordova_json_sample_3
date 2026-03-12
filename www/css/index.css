@@ -1,96 +1,390 @@
-/* ① リセット・基本スタイル */
-* {box-sizing: border-box; margin: 0; padding: 0;}
-body {font-family: sans-serif; background: #f5f5f5; -webkit-user-select: none;}
+/* ===== リセット・基本 ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #2d3748;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  -webkit-user-select: none;
+  /* ノッチ対応 */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
 
+/* ===== ヘッダー ===== */
+header {
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+  color: #fff;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
-/* ② ヘッダー */
-header {background: #e53935; color: white; padding: 16px; text-align: center;}
-header h1 {font-size: 24px;}
+header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
 
+/* ===== ローディング ===== */
+#loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 60px 0;
+  color: #718096;
+}
 
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #e53e3e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
-/* ③ ローディング（スピナーアニメーション） */
-#loading {display: flex; flex-direction: column; align-items: center; padding: 40px;}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-/* くるくる回る円 */
-.spinner {width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: #e53935; border-radius: 50%; animation: spin 0.8s linear infinite;}
+/* ===== エラー ===== */
+#error-message {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  color: #c53030;
+  font-size: 14px;
+}
 
-@keyframes spin {to { transform: rotate(360deg); }}
+/* ===== ポケモンリスト ===== */
+#pokemon-list {
+  list-style: none;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.pokemon-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
 
+.pokemon-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
 
-/* ④ ポケモン一覧・カード */
+.pokemon-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
-/* 一覧はグリッド2列 */
-#pokemon-list {list-style: none; padding: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;}
+.pokemon-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
-/* 1枚のカード */
-.pokemon-card {background: white; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); cursor: pointer;}
-.pokemon-card img {width: 64px; height: 64px; object-fit: contain;}
-.card-info {display: flex; flex-direction: column; gap: 4px;}
-.pokemon-number {color: #999; font-size: 12px;}
-.pokemon-name {font-weight: bold; font-size: 14px;}
+.pokemon-num {
+  font-size: 12px;
+  color: #a0aec0;
+  font-weight: 600;
+}
 
+.pokemon-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #2d3748;
+}
 
+/* ===== ダイアログオーバーレイ ===== */
+#dialog-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+}
 
-/* ⑤ タイプバッジ */
-.type-badges {display: flex; gap: 4px; flex-wrap: wrap;}
-.type-badge {padding: 2px 8px; border-radius: 12px; font-size: 11px; color: white;}
+#dialog-overlay.active {
+  display: flex;
+}
 
-/* タイプ別の色 */
-.type-fire     { background: #f44336; }
-.type-water    { background: #2196f3; }
-.type-grass    { background: #4caf50; }
-.type-electric { background: #ffc107; color: #333; }
-.type-poison   { background: #9c27b0; }
-.type-normal   { background: #9e9e9e; }
-.type-flying   { background: #03a9f4; }
-.type-bug      { background: #8bc34a; }
-.type-rock     { background: #795548; }
-.type-ground   { background: #ff9800; }
-.type-psychic  { background: #e91e63; }
-.type-ice      { background: #00bcd4; }
-.type-dragon   { background: #3f51b5; }
-.type-ghost    { background: #673ab7; }
-.type-fighting { background: #ff5722; }
+/* ===== ダイアログ本体 ===== */
+.dialog {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slide-up 0.28s ease-out;
+}
 
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
 
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
 
-/* ⑥ ダイアログ・スライダー */
+#dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d3748;
+}
 
-/* 全面を覆う暗いオーバーレイ */
-#dialog-overlay {display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 100;}
+#dialog-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #718096;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
 
-/* ダイアログ本体 */
-.dialog {background: white; border-radius: 16px; width: 90%; max-width: 400px; overflow: hidden;}
+/* ===== PageView（スライダー）=====
+ * CSS scroll-snap を使った PageView。
+ * Cordova の WebView はモバイルなので、ネイティブのスワイプで
+ * 各スライドにスナップする。Flutter の PageView と同等の UX。
+ */
+#evolution-slider {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex: 1;
+}
 
-/* ダイアログのタイトルバー */
-.dialog-header {display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #e53935; color: white;}
-#dialog-close {background: none; border: none; color: white; font-size: 20px; cursor: pointer;}
+#evolution-slider::-webkit-scrollbar {
+  display: none;
+}
 
-/* スライダー本体（横スクロール） */
-#evolution-slider {display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;}
+.slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  overflow-y: auto;
+}
 
-/* スクロールバーを非表示 */
-#evolution-slider::-webkit-scrollbar {display: none;}
+.slide-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px 28px;
+  gap: 8px;
+}
 
-/* 1枚のスライド */
-.slide {min-width: 100%; scroll-snap-align: start; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;}
-.slide img {width: 120px; height: 120px; object-fit: contain;}
+.slide-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
 
-/* ステータスバー */
-.stat-row {display: flex; align-items: center; gap: 8px; width: 100%;}
-.stat-label {width: 80px; font-size: 12px; color: #666;}
-.stat-bar-bg {flex: 1; background: #eee; border-radius: 4px; height: 8px;}
-.stat-bar {background: #e53935; border-radius: 4px; height: 8px;}
-.stat-value {width: 30px; text-align: right; font-size: 12px;}
+.slide-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #2d3748;
+}
 
-/* 矢印ボタンエリア */
-.slider-controls {display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #eee;}
-.arrow-btn {background: #e53935; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer;}
-.slider-indicators {display: flex; flex-direction: column; align-items: center; gap: 4px;}
-#slide-counter {font-size: 12px; color: #666;}
-#slider-dots {display: flex; gap: 6px;}
-.dot {width: 8px; height: 8px; border-radius: 50%; background: #ccc;}
-.dot.active {background: #e53935;}
+.slide-num {
+  font-size: 13px;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+/* タイプバッジ */
+.slide-types {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.type-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-grass    { background: #78c850; }
+.type-poison   { background: #a040a0; }
+.type-fire     { background: #f08030; }
+.type-water    { background: #6890f0; }
+.type-electric { background: #f8d030; color: #333; }
+.type-ice      { background: #98d8d8; color: #333; }
+.type-fighting { background: #c03028; }
+.type-ground   { background: #e0c068; color: #333; }
+.type-flying   { background: #a890f0; }
+.type-psychic  { background: #f85888; }
+.type-bug      { background: #a8b820; }
+.type-rock     { background: #b8a038; }
+.type-ghost    { background: #705898; }
+.type-dragon   { background: #7038f8; }
+.type-dark     { background: #705848; }
+.type-steel    { background: #b8b8d0; color: #333; }
+.type-fairy    { background: #ee99ac; color: #333; }
+.type-normal   { background: #a8a878; }
+
+/* ステータス */
+.slide-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: #f7fafc;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 70px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #a0aec0;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat span:last-child {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* 弱点 */
+.slide-weaknesses {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.weak-label {
+  font-size: 11px;
+  color: #a0aec0;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.weakness-badge {
+  display: inline-block;
+  margin: 2px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: #fed7d7;
+  color: #c53030;
+  font-weight: 600;
+}
+
+/* ===== スライダーコントロール ===== */
+.slider-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px 16px;
+  border-top: 1px solid #e2e8f0;
+  gap: 12px;
+}
+
+.arrow-btn {
+  background: none;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a5568;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.arrow-btn:active {
+  background: #edf2f7;
+}
+
+.slider-indicators {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+#slide-counter {
+  font-size: 12px;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+#slider-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.dot.active {
+  background: #e53e3e;
+  transform: scale(1.3);
+}
